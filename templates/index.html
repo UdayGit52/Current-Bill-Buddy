@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current Bill Buddy</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>⚡ Current Bill Buddy</h1>
+    <p class="subtitle">
+        Understand your electricity bill in simple Telugu
+    </p>
+
+    <div class="card">
+
+        <h2>Enter Your Electricity Details</h2>
+
+        <label>Current Month Units</label>
+        <input type="number" id="current" min="0"
+               placeholder="Example: 200">
+
+        <label>Previous Month Units</label>
+        <input type="number" id="previous" min="0"
+               placeholder="Example: 170">
+
+        <label>Current Bill Amount (₹)</label>
+        <input type="number" id="amount" min="0" step="0.01"
+               placeholder="Example: 1000">
+
+        <button onclick="analyzeBill()">Analyze My Bill</button>
+
+    </div>
+
+    <div id="result" class="card result" hidden>
+
+        <h2>Bill Analysis</h2>
+
+        <p>Current Consumption:
+            <strong id="currentResult"></strong>
+        </p>
+
+        <p>Previous Consumption:
+            <strong id="previousResult"></strong>
+        </p>
+
+        <p>Consumption Difference:
+            <strong id="difference"></strong>
+        </p>
+
+        <p>Percentage Change:
+            <strong id="percentage"></strong>
+        </p>
+
+        <hr>
+
+        <h3>Telugu Explanation</h3>
+        <p id="telugu"></p>
+
+        <h3>Next Month Estimated Bill</h3>
+        <h2 class="price" id="estimate"></h2>
+
+        <small>
+            This is an illustrative estimate, not an official bill.
+        </small>
+
+    </div>
+
+</div>
+
+<script>
+
+async function analyzeBill() {
+
+    const current = document.getElementById("current").value;
+    const previous = document.getElementById("previous").value;
+    const amount = document.getElementById("amount").value;
+
+    if (current === "" || previous === "" || amount === "" ||
+        Number(current) < 0 || Number(previous) < 0 ||
+        Number(amount) < 0) {
+        alert("Please enter valid bill details.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/analyze", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                current_units: current,
+                previous_units: previous,
+                bill_amount: amount
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error("Unable to analyze bill");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("currentResult").innerText =
+            data.current_units + " units";
+
+        document.getElementById("previousResult").innerText =
+            data.previous_units + " units";
+
+        document.getElementById("difference").innerText =
+            data.difference + " units";
+
+        document.getElementById("percentage").innerText =
+            data.percentage + "%";
+
+        document.getElementById("telugu").innerText =
+            data.explanation;
+
+        document.getElementById("estimate").innerText =
+            "₹" + data.estimated_bill;
+
+        document.getElementById("result").hidden = false;
+
+    } catch (error) {
+        alert("Something went wrong. Please try again.");
+        console.error(error);
+    }
+}
+
+</script>
+
+</body>
+</html>
